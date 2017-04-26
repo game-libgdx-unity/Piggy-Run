@@ -1,3 +1,23 @@
+1.04- Add Options and Back to pause menu (In playscene)
+- Add Long jump
+- Save stage permanently using cloud saving
+- reduce apk < 25Mb
+
+1.03
+- Add Options to Playscene- Fix bug recreate map back from start scene
+- Update icon Apk
+- Added Leaderboard using FB
+- Save current stage permanently 
+- Added free Items
+
+1.02
+- reduce size by the length of audio
+- increase level + hardness by the higher stages
+- Enable and Increase pick diamond sounds
+- Reward players get perfect move +10 diamonds
+- changed Icon and screenshots
+- Added game option panel
+
 Play "Run, Piggy Run Run Run!" with only one touch to control your piggy!
 
 Features:
