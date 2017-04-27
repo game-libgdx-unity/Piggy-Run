@@ -1,5 +1,5 @@
-1.04- Add Options and Back to pause menu (In playscene)
-- Add Long jump
+﻿1.04- Add Options and Back to pause menu (In playscene)
+- Add Long jump & Dash Mode
 - Save stage permanently using cloud saving
 - reduce apk < 25Mb
 

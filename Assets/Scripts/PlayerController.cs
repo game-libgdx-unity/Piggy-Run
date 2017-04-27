@@ -270,6 +270,8 @@ public class PlayerController : MonoBehaviour
         else
             speed = 1.1f;
 
+        speed *= UIManager.SPEED_DASH;
+
         const float rotateSpeed = .3f;
         switch (direction)
         {

@@ -69,6 +69,15 @@ public class UIManager : MonoBehaviour
         GameStateManager.Instance.itemAutoCount--;
         SetImgAutoItem();
     }
+    public static float SPEED_DASH = 1f;
+    public void OnBtnDashDown()
+    {
+        Time.timeScale = 2f;
+    }
+    public void OnBtnDashUp()
+    {
+        Time.timeScale = 1f;
+    }
 
     public void OnBtnSettingClicked()
     {
