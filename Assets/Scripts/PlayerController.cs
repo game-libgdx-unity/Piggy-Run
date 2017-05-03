@@ -89,7 +89,7 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator GetInputReady() { yield return new WaitForSeconds(.5f); inputReady = true; }
 
-    const float JUMP_DURATION = .8f;
+    float JUMP_DURATION = .8f;
     private const float PERFECT_MOVEE_THRESOLD = 0.025f;
     public float speed = 5;
     private bool spaceDown;
@@ -240,7 +240,7 @@ public class PlayerController : MonoBehaviour
             if (OnPerfectMove != null && !justUseAutoRun)
                 OnPerfectMove();
         }
-        else if (delta > .4f && OnThePath)
+        else if (delta > .5f)
         {
             Lose();
             return;
@@ -262,15 +262,21 @@ public class PlayerController : MonoBehaviour
         rigidBody.velocity = Vector2.zero;
         if (autoRun && needJump)
         {
-            if(currentPath.NeedLongJump)
-                speed = 1.25f;
+            if (currentPath.NeedLongJump)
+                speed = 1.35f;
+            else if (autoRun)
+                speed = 1f;
             else
-                speed = 1.1f;
+                speed = .7f;
         }
         else
             speed = 1.1f;
 
         speed *= UIManager.SPEED_DASH;
+        bool isLongJump = currentPath.NeedLongJump;
+
+        //if (isLongJump)
+        //    JUMP_DURATION /= 1.5f;
 
         const float rotateSpeed = .3f;
         switch (direction)
@@ -291,6 +297,9 @@ public class PlayerController : MonoBehaviour
                 Camera.transform.DOLocalRotate(new Vector3(0, 0, -45), JUMP_DURATION);
                 break;
         }
+
+        //if (isLongJump)
+        //    JUMP_DURATION *= 1.5f;
 
         if (OnCameraRotated != null)
         {

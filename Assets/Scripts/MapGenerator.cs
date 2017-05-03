@@ -18,6 +18,8 @@ public class MapGenerator : MonoBehaviour
     void Awake() { if (CurrentLevel == 1) CurrentLevel = PlayerPrefs.GetInt("CurrentLevel", CurrentLevel); }
     void Start()
     {
+        CurrentLevel = 20;
+
         nextPostiton = transform.position;
         //Debug.Log(CurrentLevel);
         Time.timeScale = CurrentTimeScale;
