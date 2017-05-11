@@ -5,17 +5,17 @@ public class DontRotateWithCamera : MonoBehaviour {
 
 	// Use this for initialization
 	void OnEnable () {
-        PlayerController.OnCameraRotated += CameraRotatedHandler;
+        PlayerController.OnPlayerDirectionChanged += CameraRotatedHandler;
     }
 	
 	// Update is called once per frame
 	void OnDisable () {
-        PlayerController.OnCameraRotated -= CameraRotatedHandler;
+        PlayerController.OnPlayerDirectionChanged -= CameraRotatedHandler;
     }
 
     void OnDestroy()
     {
-        PlayerController.OnCameraRotated -= CameraRotatedHandler;
+        PlayerController.OnPlayerDirectionChanged -= CameraRotatedHandler;
     }
 
     void CameraRotatedHandler(Direction direction)

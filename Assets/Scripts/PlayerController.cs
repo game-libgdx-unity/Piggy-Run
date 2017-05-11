@@ -36,7 +36,7 @@ public class PlayerController : MonoBehaviour
     public static bool running = false;
     public static System.Action OnPerfectMove;
     public static System.Action OnPlayerLost;
-    public static System.Action<Direction> OnCameraRotated;
+    public static System.Action<Direction> OnPlayerDirectionChanged;
     public static System.Action<Path> OnDiamondPicked;
 
     void OnEnable()
@@ -290,9 +290,9 @@ public class PlayerController : MonoBehaviour
                 break;
         }
 
-        if (OnCameraRotated != null)
+        if (OnPlayerDirectionChanged != null)
         {
-            OnCameraRotated(direction);
+            OnPlayerDirectionChanged(direction);
         }
     }
 
