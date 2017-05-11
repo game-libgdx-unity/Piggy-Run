@@ -57,7 +57,7 @@ public class MapGenerator : MonoBehaviour
 
     private static int Hardness()
     {
-        return (int)(CurrentLevel * .3f);
+        return (int)(CurrentLevel * .1f);
     }
 
     public static System.Action<int> OnNewLevelLoaded;
@@ -71,7 +71,7 @@ public class MapGenerator : MonoBehaviour
             firstRoad = false;
         }
         int space = 2 + Hardness();
-        hasSpace = Random.Range(0, space) < 2 ? false : true; //random hasSpace
+        hasSpace = Random.Range(0, space) < 1 ? false : true; //random hasSpace
         nextLength = Random.Range((newLevel || endPath) ? (CurrentLevel < 5 ? 8 : 5) : (CurrentLevel < 5 ? 4 : 3), CurrentLevel < 5 ? 10 : 5); // random length
 
         GameObject obj = (GameObject)Instantiate(roadPrefap, nextPostiton, Quaternion.identity); //get the road
