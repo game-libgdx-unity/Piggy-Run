@@ -36,7 +36,27 @@ namespace UTJ
 
         private IEnumerator act()
         {
-            yield return null;
+            // SystemManager.Instance.registBgm(DrawBuffer.BGM.Battle);
+            {
+                float x = MyRandom.Range(500, 1000) * Random.Range(0, 2) == 0 ? 1 : -1;
+                var position = new Vector3(x, -10f, 20f) + Player.Instance.rigidbody_.transform_.position_;
+                var rotation = Quaternion.Euler(-90f, 0f, 0f);
+                Enemy.create(Enemy.Type.Dragon, ref position, ref rotation);
+            }
+            for (;;)
+            {
+                {
+                    float x = MyRandom.Range(50, 100) * Random.Range(0, 2) == 0 ? 1 : -1;
+                    var position = new Vector3(x, -10f, 20f) + Player.Instance.rigidbody_.transform_.position_;
+                    var rotation = Quaternion.Euler(-90f, 0f, 0f);
+                    Enemy.create(Enemy.Type.Zako, ref position, ref rotation);
+                }
+                for (var i = new Utility.WaitForSeconds(MyRandom.Range(1f, 3f), update_time_); !i.end(update_time_);)
+                {
+                    yield return null;
+                }
+                yield return null;
+            }
         }
     }
 

@@ -6,17 +6,7 @@ using System.Collections;
 
 namespace UTJ {
 
-public class PerformanceFetcher : MonoBehaviour {
-
-	void OnPreRender()
-	{
-		PerformanceMeter.Instance.beginConsoleRender();
-	}
-
-	void OnPreCull()
-	{
-		PerformanceMeter.Instance.endConsoleRender();
-	}
+public class PerformanceFetcher : MonoBehaviour { 
 
 }
 

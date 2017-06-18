@@ -39,8 +39,7 @@ public class Recorder : MonoBehaviour
     }
 
 	void Update ()
-	{
-		PerformanceMeter.Instance.setRecording();
+	{ 
         checkRecodingKey();
 
         if (isRecording == true)

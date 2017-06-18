@@ -8,6 +8,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using EndlessRun;
 
 namespace UTJ
 {
@@ -21,7 +22,11 @@ namespace UTJ
 
         public bool water_surface_distortion_ = true;
         public bool water_surface_line_render_ = false;
-
+        public GameObject player_prefab_;
+        public GameObject enemy_zako_prefab_;
+        public GameObject dragon_head_prefab_;
+        public GameObject dragon_body_prefab_;
+        public GameObject dragon_tail_prefab_;
         public Material final_material_;
         public Material spark_material_;
         public Material beam_material_;
@@ -41,7 +46,7 @@ namespace UTJ
         public GameObject canvas_;
 
         public GameObject camera_holder_;
-        private Camera camera_; 
+        private Camera camera_;
         private RenderTexture render_texture_;
         public Matrix4x4 ProjectionMatrix { get; set; }
 
@@ -73,6 +78,17 @@ namespace UTJ
         private bool pause_;
         // private long update_tick_;
         // private long render_update_tick_;
+
+        private const int ENEMY_ZAKO_MAX = 32;
+        private const int DRAGON_HEAD_MAX = 1;
+        private const int DRAGON_BODY_MAX = 8;
+        private const int DRAGON_TAIL_MAX = 1;
+
+        private MuscleMotionRenderer muscle_motion_renderer_player_;
+        private GameObject[] enemy_zako_pool_;
+        private GameObject[] dragon_head_pool_;
+        private GameObject[] dragon_body_pool_;
+        private GameObject[] dragon_tail_pool_;
 
         // audio
         public const int AUDIO_CHANNEL_MAX = 4;
@@ -122,7 +138,9 @@ namespace UTJ
         }
 
         private IEnumerator initialize()
-        { 
+        {
+            //camera_final_ = camera_final_holder_.GetComponent<Camera>();
+            //camera_final_.enabled = false;
             UnityPluginIF.Load("UnityPlugin");
 
             Application.targetFrameRate = (int)RENDER_FPS;
@@ -130,7 +148,7 @@ namespace UTJ
 
             stopwatch_ = new System.Diagnostics.Stopwatch();
             stopwatch_.Start();
-            rendering_front_ = 1;
+            rendering_front_ = 0;
 
 #if UTJ_MULTI_THREADED
 		manual_reset_event_ = new System.Threading.ManualResetEvent(false);
@@ -148,12 +166,97 @@ namespace UTJ
             camera_ = camera_holder_.GetComponent<Camera>();
             ProjectionMatrix = camera_.projectionMatrix;
 
-            Initialize();
+            BoxingPool.init();
+            InputManager.Instance.init();
+            Controller.Instance.init(auto_);
+            TaskManager.Instance.init();
+            MyCollider.createPool();
+            Bullet.createPool();
+            EnemyBullet.createPool();
+            EnemyLaser.createPool();
+            Enemy.createPool();
+            WaterSurface.Instance.init(water_surface_input_material_, water_surface_distortion_, water_surface_line_render_);
+            WaterSurfaceRenderer.Instance.init(camera_.transform);
+            Spark.Instance.init(spark_material_);
+            Beam.Instance.init(beam_material_);
+            BeamRenderer.Instance.init(Beam.Instance);
+            Beam2.Instance.init(beam2_material_);
+            Beam2Renderer.Instance.init(Beam2.Instance);
+            WaterSplash.Instance.init(water_splash_material_, WaterSurfaceRenderer.Instance.getReflectionTexture());
+            WaterSplashRenderer.Instance.init(WaterSplash.Instance);
+            AuraEffect.Instance.init();
+            Explosion.Instance.init(explosion_material_);
+            ExplosionRenderer.Instance.init(Explosion.Instance);
+            Hahen.Instance.init(hahen_material_);
+            HahenRenderer.Instance.init(Hahen.Instance);
+            Shield.Instance.init(shield_material_);
+            ShieldRenderer.Instance.init(Shield.Instance);
+            Debris.Instance.init(debris_material_);
+            Dust.Instance.init(dust_material_);
+            LightEnvironmentController.Instance.init();
+            Sight.Instance.init(sight_material_);
+            SightRenderer.Instance.init(Sight.Instance);
+            MySprite.Instance.init(sprites_, sprite_material_);
+            MySpriteRenderer.Instance.init(camera_);
+            MyFont.Instance.init(font_, font_material_);
+            MyFontRenderer.Instance.init();
+            GaugeJump.Create();
 
-            yield return null;
+            draw_buffer_ = new DrawBuffer[2];
+            for (int i = 0; i < 2; ++i)
+            {
+                draw_buffer_[i].init();
+            }
+
+            yield return Player.Instance.initialize();
             my_camera_ = MyCamera.create();
             spectator_camera_ = SpectatorCamera.create();
             set_camera(spectator_mode_);
+
+            if (player_prefab_ != null)
+            {
+                GameObject go = Instantiate(player_prefab_);
+                go.transform.position = Vector3.up * RoadGenerator.LAND_HEIGHT;
+                Player.Instance.robotT = go.transform;
+                muscle_motion_renderer_player_ = go.GetComponent<MuscleMotionRenderer>();
+                muscle_motion_renderer_player_.init();
+            }
+            if (enemy_zako_prefab_ != null)
+            {
+                enemy_zako_pool_ = new GameObject[ENEMY_ZAKO_MAX];
+                for (var i = 0; i < ENEMY_ZAKO_MAX; ++i)
+                {
+                    enemy_zako_pool_[i] = Instantiate(enemy_zako_prefab_) as GameObject;
+                    enemy_zako_pool_[i].SetActive(false);
+                }
+            }
+            if (dragon_head_prefab_ != null)
+            {
+                dragon_head_pool_ = new GameObject[DRAGON_HEAD_MAX];
+                for (var i = 0; i < DRAGON_HEAD_MAX; ++i)
+                {
+                    dragon_head_pool_[i] = Instantiate(dragon_head_prefab_) as GameObject;
+                    dragon_head_pool_[i].SetActive(false);
+                }
+            }
+            if (dragon_body_prefab_ != null)
+            {
+                dragon_body_pool_ = new GameObject[DRAGON_BODY_MAX];
+                for (var i = 0; i < DRAGON_BODY_MAX; ++i)
+                {
+                    dragon_body_pool_[i] = Instantiate(dragon_body_prefab_) as GameObject;
+                    dragon_body_pool_[i].SetActive(false);
+                }
+            }
+            if (dragon_tail_prefab_ != null)
+            {
+                dragon_tail_pool_ = new GameObject[DRAGON_TAIL_MAX];
+                for (var i = 0; i < DRAGON_TAIL_MAX; ++i)
+                {
+                    dragon_tail_pool_[i] = Instantiate(dragon_tail_prefab_) as GameObject;
+                    dragon_tail_pool_[i].SetActive(false);
+                }
+            }
 
             // audio
             audio_sources_bullet_ = new AudioSource[AUDIOSOURCE_BULLET_MAX];
@@ -225,45 +328,8 @@ namespace UTJ
             //camera_.targetTexture = render_texture_;
             //final_material_.mainTexture = render_texture_;
 
-            initialized_ = true; 
-        }
-
-        private void Initialize()
-        {
-            BoxingPool.init();
-            TaskManager.Instance.init();
-            WaterSurface.Instance.init(water_surface_input_material_, water_surface_distortion_, water_surface_line_render_);
-            WaterSurfaceRenderer.Instance.init(camera_.transform);
-            Spark.Instance.init(spark_material_);
-            Beam.Instance.init(beam_material_);
-            //BeamRenderer.Instance.init(Beam.Instance);
-            Beam2.Instance.init(beam2_material_);
-            Beam2Renderer.Instance.init(Beam2.Instance);
-            WaterSplash.Instance.init(water_splash_material_, WaterSurfaceRenderer.Instance.getReflectionTexture());
-            WaterSplashRenderer.Instance.init(WaterSplash.Instance);
-            AuraEffect.Instance.init();
-            Explosion.Instance.init(explosion_material_);
-            ExplosionRenderer.Instance.init(Explosion.Instance);
-            Hahen.Instance.init(hahen_material_);
-            HahenRenderer.Instance.init(Hahen.Instance);
-            Shield.Instance.init(shield_material_);
-            ShieldRenderer.Instance.init(Shield.Instance);
-            Debris.Instance.init(debris_material_);
-            Dust.Instance.init(dust_material_);
-            LightEnvironmentController.Instance.init();
-            Sight.Instance.init(sight_material_);
-            SightRenderer.Instance.init(Sight.Instance);
-            MySprite.Instance.init(sprites_, sprite_material_);
-            MySpriteRenderer.Instance.init(camera_);
-            MyFont.Instance.init(font_, font_material_);
-            MyFontRenderer.Instance.init();
-            GaugeJump.Create();
-            PerformanceMeter.Instance.init();
-            draw_buffer_ = new DrawBuffer[2];
-            for (int i = 0; i < 2; ++i)
-            {
-                draw_buffer_[i].init();
-            }
+            initialized_ = true;
+            //camera_final_.enabled = true;
         }
 
         void OnDestroy()
@@ -286,17 +352,27 @@ namespace UTJ
 
         private void main_loop()
         {
-            PerformanceMeter.Instance.beginUpdate();
-            int updating_front = get_front(); 
+            int updating_front = get_front();
+
+            // fetch
+            //Controller.Instance.fetch(updating_front, update_time_);
+
+            //var controller = Controller.Instance.getLatest();
+//            if (!pause_ && controller.isPauseButtonDown())
+//            {
+//                pause_ = true;
+//            }
+//#if UNITY_EDITOR
+//            else if (pause_ && controller.isPauseButtonDown())
+//            {
+//                pause_ = false;
+//            }
+//#endif
 
             // update
             if (!pause_)
             {
                 int loop_num = 1;
-                if (PerformanceMeter.Instance.wasSlowLoop())
-                {
-                    loop_num = 2;
-                }
                 for (var loop = 0; loop < loop_num; ++loop)
                 {
                     GameManager.Instance.update(dt_, update_time_);
@@ -307,9 +383,6 @@ namespace UTJ
                     update_time_ += dt_;
                 }
             }
-            PerformanceMeter.Instance.endUpdate();
-
-            PerformanceMeter.Instance.beginRenderUpdate();
             CameraBase current_camera = spectator_mode_ ? spectator_camera_ : my_camera_;
             // begin
             MySprite.Instance.begin();
@@ -337,7 +410,6 @@ namespace UTJ
 #else
             bool multi_threading = false;
 #endif
-            PerformanceMeter.Instance.drawMeters(updating_front, multi_threading);
 
             // end
             Sight.Instance.end(updating_front, current_camera);
@@ -349,8 +421,6 @@ namespace UTJ
             Spark.Instance.end(updating_front);
             MyFont.Instance.end(updating_front);
             MySprite.Instance.end(updating_front);
-
-            PerformanceMeter.Instance.endRenderUpdate();
         }
 
 #if UTJ_MULTI_THREADED
@@ -393,7 +463,69 @@ namespace UTJ
         // オブジェクト描画(SetActive)
         private void render(ref DrawBuffer draw_buffer)
         {
-            camera_.enabled = true; 
+            // camera
+            //camera_.transform.position = draw_buffer.camera_transform_.position_;
+            //camera_.transform.rotation = draw_buffer.camera_transform_.rotation_;
+            //camera_.enabled = true;
+
+            int enemy_zako_idx = 0;
+            int dragon_head_idx = 0;
+            int dragon_body_idx = 0;
+            int dragon_tail_idx = 0;
+            for (var i = 0; i < draw_buffer.object_num_; ++i)
+            {
+                switch (draw_buffer.object_buffer_[i].type_)
+                {
+                    case DrawBuffer.Type.None:
+                        Debug.Assert(false);
+                        break;
+                    case DrawBuffer.Type.Empty:
+                        break;
+                    case DrawBuffer.Type.MuscleMotionPlayer:
+                        muscle_motion_renderer_player_.render(ref draw_buffer.object_buffer_[i]);
+                        break;
+                    case DrawBuffer.Type.Zako:
+                        enemy_zako_pool_[enemy_zako_idx].SetActive(true);
+                        enemy_zako_pool_[enemy_zako_idx].transform.localPosition = draw_buffer.object_buffer_[i].transform_.position_;
+                        enemy_zako_pool_[enemy_zako_idx].transform.localRotation = draw_buffer.object_buffer_[i].transform_.rotation_;
+                        ++enemy_zako_idx;
+                        break;
+                    case DrawBuffer.Type.DragonHead:
+                        dragon_head_pool_[dragon_head_idx].SetActive(true);
+                        dragon_head_pool_[dragon_head_idx].transform.localPosition = draw_buffer.object_buffer_[i].transform_.position_;
+                        dragon_head_pool_[dragon_head_idx].transform.localRotation = draw_buffer.object_buffer_[i].transform_.rotation_;
+                        ++dragon_head_idx;
+                        break;
+                    case DrawBuffer.Type.DragonBody:
+                        dragon_body_pool_[dragon_body_idx].SetActive(true);
+                        dragon_body_pool_[dragon_body_idx].transform.localPosition = draw_buffer.object_buffer_[i].transform_.position_;
+                        dragon_body_pool_[dragon_body_idx].transform.localRotation = draw_buffer.object_buffer_[i].transform_.rotation_;
+                        ++dragon_body_idx;
+                        break;
+                    case DrawBuffer.Type.DragonTail:
+                        dragon_tail_pool_[dragon_tail_idx].SetActive(true);
+                        dragon_tail_pool_[dragon_tail_idx].transform.localPosition = draw_buffer.object_buffer_[i].transform_.position_;
+                        dragon_tail_pool_[dragon_tail_idx].transform.localRotation = draw_buffer.object_buffer_[i].transform_.rotation_;
+                        ++dragon_tail_idx;
+                        break;
+                }
+            }
+            for (var i = enemy_zako_idx; i < ENEMY_ZAKO_MAX; ++i)
+            {
+                enemy_zako_pool_[i].SetActive(false);
+            }
+            for (var i = dragon_head_idx; i < DRAGON_HEAD_MAX; ++i)
+            {
+                dragon_head_pool_[i].SetActive(false);
+            }
+            for (var i = dragon_body_idx; i < DRAGON_BODY_MAX; ++i)
+            {
+                dragon_body_pool_[i].SetActive(false);
+            }
+            for (var i = dragon_tail_idx; i < DRAGON_TAIL_MAX; ++i)
+            {
+                dragon_tail_pool_[i].SetActive(false);
+            }
 
             // audio
             for (var i = 0; i < AUDIO_CHANNEL_MAX; ++i)
@@ -490,6 +622,7 @@ namespace UTJ
             Debris.Instance.render(rendering_front_, camera_, render_time);
             Dust.Instance.render(rendering_front_, camera_, render_time);
             LightEnvironmentController.Instance.render(render_time);
+
             Sight.Instance.render(rendering_front_);
             MySprite.Instance.render(rendering_front_);
             MyFont.Instance.render(rendering_front_);
@@ -519,12 +652,12 @@ namespace UTJ
         // The Update
         void Update()
         {
-            PerformanceMeter.Instance.beginRender();
             if (!initialized_)
             {
                 return;
             }
-            PerformanceMeter.Instance.beginBehaviourUpdate();
+
+            //InputManager.Instance.update(rendering_front_);
 #if !UTJ_MULTI_THREADED
             main_loop();
 #endif
@@ -539,14 +672,14 @@ namespace UTJ
                 return;
             }
             camera_update();
-            PerformanceMeter.Instance.endBehaviourUpdate();
         }
 
         public void OnPauseMenuAuto()
         {
             auto_ = true;
             spectator_mode_ = true;
-            set_camera(spectator_mode_); 
+            set_camera(spectator_mode_);
+            //Controller.Instance.set(auto_);
             pause_ = false;
         }
 
@@ -554,7 +687,8 @@ namespace UTJ
         {
             auto_ = false;
             spectator_mode_ = false;
-            set_camera(spectator_mode_); 
+            set_camera(spectator_mode_);
+            //Controller.Instance.set(auto_);
             pause_ = false;
         }
     }

@@ -101,13 +101,13 @@ public class Bullet : Task
 		var collider_type = MyCollider.getHitOpponentForBullet(collider_);
 		if (collider_type != MyCollider.Type.None) {
 			if (collider_type == MyCollider.Type.EnemyHoming) {
-				Vector3 target;
-				MyCollider.getHitOpponentInfoPositionForBullet(collider_, out target);
-				var diff = target - rigidbody_.transform_.position_;
-				Vector3.Normalize(diff);
-				const float speed = 10f;
-				diff *= speed;
-				rigidbody_.setVelocity(ref diff);
+				//Vector3 target;
+				//MyCollider.getHitOpponentInfoPositionForBullet(collider_, out target);
+				//var diff = target - rigidbody_.transform_.position_;
+				//Vector3.Normalize(diff);
+				//const float speed = 10f;
+				//diff *= speed;
+				//rigidbody_.setVelocity(ref diff);
 			} else {
 				Spark.Instance.spawn(ref rigidbody_.transform_.position_, Spark.Type.Bullet, update_time);
 				destroy();

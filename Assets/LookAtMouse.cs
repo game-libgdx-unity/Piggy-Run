@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using RobotDemo;
 using DG.Tweening;
+using UTJ;
 
 public class LookAtMouse : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class LookAtMouse : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 10000f))
-        { 
+        {
             Debug.Log(hit.collider.gameObject.name);
             Vector3 direction = hit.point - gunT.transform.position;
             Quaternion localRotation = Quaternion.LookRotation(direction);
@@ -27,14 +28,23 @@ public class LookAtMouse : MonoBehaviour
             gunT.localRotation = targetQuarternion;
             if (Input.GetMouseButton(0))
             {
-                i++;
                 timer += Time.deltaTime;
-                if(timer > .2f)
+                if (timer > .1f)
                 {
-                    Beamer.Instance.Shoot(shootingT[i % shootingT.Length].position, 30 * direction.normalized, 10 /*damage*/);
+                    i++;
+                    Vector3 pos = shootingT[i % shootingT.Length].position;
+                    if (i % 2 == 0)
+                    {
+                        Player.Instance.Fire_left(ref pos, ref localRotation);
+                    }
+                    else
+                    {
+                        Player.Instance.Fire_right(ref pos, ref localRotation);
+                    }
+                    //Beamer.Instance.Shoot(shootingT[i % shootingT.Length].position, 30 * direction.normalized, 10 /*damage*/);
                     timer = 0f;
                 }
-            } 
+            }
         }
     }
 }

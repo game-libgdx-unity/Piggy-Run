@@ -80,8 +80,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             // calculate the head look target position
             lookPos = lookInCameraDirection && cam != null
                           ? transform.position + cam.forward*100
-                          : transform.position + transform.forward*100;
-            print(move);
+                          : transform.position + transform.forward*100; 
             // pass all parameters to the character control script
             character.Move(move, v, h, crouch, jump, lookPos);
             jump = false;

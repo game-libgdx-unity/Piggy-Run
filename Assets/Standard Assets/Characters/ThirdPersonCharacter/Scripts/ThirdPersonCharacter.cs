@@ -53,12 +53,13 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         private IComparer rayHitComparer;
         public float lookBlendTime;
         public float lookWeight;
-
+        public float speed = 2f;
+        Rigidbody rigidBody;
         // Use this for initialization
         private void Start()
         {
             capsule = GetComponent<Collider>() as CapsuleCollider;
-
+            rigidBody = GetComponent<Rigidbody>();
             // as can return null so we need to make sure thats its not before assigning to it
             if (capsule == null)
             {
@@ -67,10 +68,10 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             else
             {
                 originalHeight = capsule.height;
-                capsule.center = Vector3.up*originalHeight*half;
+                capsule.center = Vector3.up * originalHeight * half;
             }
 
-            rayHitComparer = new RayHitComparer(); 
+            rayHitComparer = new RayHitComparer();
 
             // give the look position a default in case the character is not under control
             currentLookPos = Camera.main.transform.position;
@@ -104,8 +105,8 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             this.crouchInput = crouch;
             this.jumpInput = jump;
             this.currentLookPos = lookPos;
-            velocity = GetComponent<Rigidbody>().velocity;
-            GroundCheck(); 
+            velocity = rigidBody.velocity;
+            GroundCheck();
             SetFriction();
             if (onGround && jumpInput && !crouchInput)
             {
@@ -115,22 +116,24 @@ namespace UnitySampleAssets.Characters.ThirdPerson
             }
             animator.SetFloat("vSpeed", v);
             animator.SetFloat("hSpeed", h);
+            //animator.SetFloat("ySpeed", rigidBody.velocity.y);
+
             animator.SetBool("onGround", onGround);
             velocity.x = h;
-            velocity.z = v;
-            GetComponent<Rigidbody>().velocity = velocity; 
-        } 
+            velocity.z = v * speed;
+            rigidBody.velocity = velocity;
+        }
 
         private void GroundCheck()
         {
-            Ray ray = new Ray(transform.position + Vector3.up*.1f, -Vector3.up);
-            RaycastHit[] hits = Physics.RaycastAll(ray, .5f,groundCheckMask);
+            Ray ray = new Ray(transform.position + Vector3.up * .1f, -Vector3.up);
+            RaycastHit[] hits = Physics.RaycastAll(ray, .5f, groundCheckMask);
             System.Array.Sort(hits, rayHitComparer);
 
-            if (velocity.y < jumpPower*.5f)
+            if (velocity.y < jumpPower * .5f)
             {
                 onGround = false;
-                GetComponent<Rigidbody>().useGravity = true;
+                rigidBody.useGravity = true;
                 foreach (var hit in hits)
                 {
                     // check whether we hit a non-trigger collider (and not the character itself)
@@ -141,12 +144,12 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                         // stick to surface - helps character stick to ground - specially when running down slopes
                         if (velocity.y <= 0)
                         {
-                            GetComponent<Rigidbody>().position = Vector3.MoveTowards(GetComponent<Rigidbody>().position, hit.point,
-                                                                     Time.deltaTime*advancedSettings.groundStickyEffect);
+                            rigidBody.position = Vector3.MoveTowards(rigidBody.position, hit.point,
+                                                                     Time.deltaTime * advancedSettings.groundStickyEffect);
                         }
 
                         onGround = true;
-                        GetComponent<Rigidbody>().useGravity = false;
+                        rigidBody.useGravity = false;
                         break;
                     }
                 }
@@ -178,7 +181,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
                 // while in air, we want no friction against surfaces (walls, ceilings, etc)
                 GetComponent<Collider>().material = advancedSettings.zeroFrictionMaterial;
             }
-        }  
+        }
 
 
         void OnDisable()
@@ -191,7 +194,7 @@ namespace UnitySampleAssets.Characters.ThirdPerson
         {
             public int Compare(object x, object y)
             {
-                return ((RaycastHit) x).distance.CompareTo(((RaycastHit) y).distance);
+                return ((RaycastHit)x).distance.CompareTo(((RaycastHit)y).distance);
             }
         }
     }

@@ -42,9 +42,9 @@ public class AuraEffect : MonoBehaviour {
 	private void OnRenderImage(RenderTexture source, RenderTexture destination)
 	{
 		float v = 0f;
-		//if (Player.Instance != null) {
-		//	v = Player.Instance.getAuraValue();
-		//}
+		if (Player.Instance != null) {
+			v = Player.Instance.getAuraValue();
+		}
 		value_ = Mathf.Lerp(value_, v, 0.1f);
 		var col = color_ * value_;
 		aura_material_.SetColor(AuraColorId, col);

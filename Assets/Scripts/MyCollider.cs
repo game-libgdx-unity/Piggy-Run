@@ -232,7 +232,61 @@ public struct MyCollider
 
 	public static void calculate()
 	{
-		 
+		// clear
+		player_.opponent_info_.clear();
+		for (var i = 0; i < pool_bullet_.Length; ++i) {
+			pool_bullet_[i].opponent_info_.clear();
+		}
+		for (var i = 0; i < pool_enemy_.Length; ++i) {
+			pool_enemy_[i].opponent_info_.clear();
+		}
+		for (var i = 0; i < pool_enemy_homing_.Length; ++i) {
+			pool_enemy_homing_[i].opponent_info_.clear();
+		}
+		for (var i = 0; i < pool_enemy_bullet_.Length; ++i) {
+			pool_enemy_bullet_[i].opponent_info_.clear();
+		}
+
+		// player - enemy
+		nearest_enemy_index_ = -1;
+		float nearest_dist2 = System.Single.MaxValue;
+		for (var i = 0; i < pool_enemy_.Length; ++i) {
+			if (pool_enemy_[i].alive_ && !pool_enemy_[i].disabled_) {
+				var dist2 = check_intersection(ref player_, ref pool_enemy_[i]);
+				if (dist2 < nearest_dist2) {
+					nearest_dist2 = dist2;
+					nearest_enemy_index_ = i;
+				}
+			}
+		}
+		// player - enemy_bullet
+		for (var i = 0; i < pool_enemy_bullet_.Length; ++i) {
+			if (pool_enemy_bullet_[i].alive_) {
+				check_intersection(ref player_, ref pool_enemy_bullet_[i]);
+			}
+		}
+		// enemy - bullet
+		for (var i = 0; i < pool_enemy_.Length; ++i) {
+			if (pool_enemy_[i].alive_ && !pool_enemy_[i].disabled_) {
+				for (var j = 0; j < pool_bullet_.Length; ++j) {
+					if (pool_bullet_[j].alive_) {
+						check_intersection(ref pool_enemy_[i], ref pool_bullet_[j]);
+					}
+				}
+			}
+		}
+		// enemy_homing - bullet
+		for (var i = 0; i < pool_enemy_homing_.Length; ++i) {
+			if (pool_enemy_homing_[i].alive_ && !pool_enemy_homing_[i].disabled_) {
+				for (var j = 0; j < pool_bullet_.Length; ++j) {
+					if (pool_bullet_[j].alive_ && !pool_bullet_[j].disabled_ && pool_bullet_[j].phase_ == 0) {
+						if (pool_enemy_homing_[i].center_.y > 0f) {
+							check_homing(ref pool_enemy_homing_[i], ref pool_bullet_[j]);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	private static float check_intersection(ref MyCollider col0, ref MyCollider col1)

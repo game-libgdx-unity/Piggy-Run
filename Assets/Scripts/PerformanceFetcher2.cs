@@ -6,12 +6,7 @@ using System.Collections;
 
 namespace UTJ {
 
-public class PerformanceFetcher2 : MonoBehaviour {
-
-	void OnPostRender()
-	{
-		PerformanceMeter.Instance.endRender();
-	}
+public class PerformanceFetcher2 : MonoBehaviour { 
 
 }
 
