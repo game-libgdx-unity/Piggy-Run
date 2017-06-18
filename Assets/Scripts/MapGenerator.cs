@@ -1,148 +1,172 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using RobotDemo;
+using UnitySampleAssets.Cameras;
 
-public class MapGenerator : MonoBehaviour
+namespace EndlessRun
 {
-    public GameObject roadPrefap;
-    public int NumberOfRoad;
-    Direction nextDirection;
-    int nextLength;
-    Vector3 nextPostiton;
-    public Vector3 EndPosition;
-    bool hasSpace;
-    bool firstRoad = true;
-    public static int CurrentLevel = 1;
-    public static List<MapGenerator> Maps = new List<MapGenerator>();
-    public static float CurrentTimeScale { get { return 1f/*Mathf.Max(.9f, 1f - CurrentLevel * .005f);*/; } }
-    void Awake() { if (CurrentLevel == 1) CurrentLevel = PlayerPrefs.GetInt("CurrentLevel", CurrentLevel); }
-    void Start()
+    public class MapGenerator : MonoBehaviour
     {
-        nextPostiton = transform.position;
-        //Debug.Log(CurrentLevel);
-        Time.timeScale = CurrentTimeScale;
+        public GameObject roadPrefap;
+        public GameObject playerPrefab;
 
-        NumberOfRoad += Hardness();
+        public int NumberOfRoad;
+        Direction nextDirection;
+        int nextLength;
+        Vector3 nextPostiton;
+        public Vector3 EndPosition;
+        bool firstRoad = true;
+        public static GameObject player;
+        public static int CurrentLevel = 1;
+        public static List<MapGenerator> Maps = new List<MapGenerator>();
+        public static float CurrentTimeScale { get { return 1f/*Mathf.Max(.9f, 1f - CurrentLevel * .005f);*/; } }
 
-        for (int i = 0; i < NumberOfRoad; i++)
+        public Direction NextDirection { get { return nextDirection; } set { if (nextDirection != value) { nextDirection = value; } } }
+
+        void Awake() { if (CurrentLevel == 1) CurrentLevel = PlayerPrefs.GetInt("CurrentLevel", CurrentLevel); }
+        void Start()
         {
-            RoadGenerator road = nextRoad(i == 0, i == NumberOfRoad - 1);
-            road.transform.parent = this.transform;
-
-            if (i == NumberOfRoad - 1)
+            nextPostiton = transform.position;
+            //Debug.Log(CurrentLevel);
+            Time.timeScale = CurrentTimeScale;
+            NumberOfRoad += Hardness();
+            //create level
+            for (int i = 0; i < NumberOfRoad; i++)
             {
-                EndPosition = road.EndPosition;
+                RoadGenerator road = nextRoad(i == 0, i == NumberOfRoad - 1);
+                road.transform.parent = this.transform;
+
+                if (i == NumberOfRoad - 1)
+                {
+                    EndPosition = road.EndPosition;
+                }
+            }
+            Maps.Add(this);
+            //destroy old level
+            if (Maps.Count > 2)
+            {
+                Destroy(Maps[0].gameObject);
+                Maps.RemoveAt(0);
+            }
+            //create player
+            StartCoroutine(CreatePlayer());
+            //call the event
+            if (OnNewLevelLoaded != null)
+            {
+                OnNewLevelLoaded(CurrentLevel);
+            }
+            CurrentLevel++;
+            Debug.Log("Map ready");
+        }
+
+        private IEnumerator CreatePlayer()
+        {
+            yield return new WaitForSeconds(.5f);
+            if (!player && playerPrefab)
+            {
+                player = Instantiate(playerPrefab, Vector3.up * RoadGenerator.LAND_HEIGHT, Quaternion.identity);
+                AutoCam camera = GameObject.Find("MultipurposeCameraRig").GetComponent<AutoCam>();
+                camera.SetTarget(player.transform);
             }
         }
-        Maps.Add(this);
-        if (Maps.Count > 2)
+
+        private static int Hardness()
         {
-            Destroy(Maps[0].gameObject);
-            Maps.RemoveAt(0);
+            return (int)(CurrentLevel * .1f);
         }
 
+        public static System.Action<int> OnNewLevelLoaded;
+        private Direction lastDir = Direction.Straight;
+        private int space;
 
-
-        if (OnNewLevelLoaded != null)
+        // Update is called once per frame
+        RoadGenerator nextRoad(bool newLevel = false, bool endPath = false)
         {
-            OnNewLevelLoaded(CurrentLevel);
-        }
-        CurrentLevel++;
-
-
-        Debug.Log("Map ready");
-
-        SoundManager.PlayBGMusic(true);
-    }
-
-    private static int Hardness()
-    {
-        return (int)(CurrentLevel * .1f);
-    }
-
-    public static System.Action<int> OnNewLevelLoaded;
-
-    // Update is called once per frame
-    RoadGenerator nextRoad(bool newLevel = false, bool endPath = false)
-    {
-        if (firstRoad)
-        {
-            nextDirection = Direction.Straight;
-            firstRoad = false;
-        }
-        int space = 2 + Hardness();
-        hasSpace = Random.Range(0, space) < 1 ? false : true; //random hasSpace
-        nextLength = Random.Range((newLevel || endPath) ? (CurrentLevel < 5 ? 8 : 5) : (CurrentLevel < 5 ? 4 : 3), CurrentLevel < 5 ? 10 : 5); // random length
-
-        GameObject obj = (GameObject)Instantiate(roadPrefap, nextPostiton, Quaternion.identity); //get the road
-        RoadGenerator road = obj.GetComponent<RoadGenerator>();
-        bool longSpace = hasSpace ? Random.Range(0, 2) == 0 : false;
-        road.Map = this;
-        road.direction = nextDirection;
-        road.length = nextLength;
-        calculateNextPosition(longSpace);
-        road.Generate(hasSpace, longSpace, endPath, newLevel);
-
-        //next spawm position
-        int changeDirectionRate = 2 + Hardness();
-        if (Random.Range(0, changeDirectionRate) == 0)
-            nextDirection = convertIntToDirection(Random.Range(0, 3)); // random direction
-        else
-        {
-            int next = (Random.Range(0, 3));
-            while (next == (int)nextDirection)
+            if (firstRoad)
             {
-                next = (Random.Range(0, 3));
+                NextDirection = Direction.Straight;
+                firstRoad = false;
             }
-            nextDirection = convertIntToDirection(next);
+
+
+            //nextLength = Random.Range((newLevel || endPath) ? (CurrentLevel < 5 ? 8 : 5) : (CurrentLevel < 5 ? 4 : 3), CurrentLevel < 5 ? 10 : 5); // random length
+            nextLength = Random.Range(15, 20);
+            GameObject obj = (GameObject)Instantiate(roadPrefap, nextPostiton, Quaternion.identity); //get the road
+            RoadGenerator road = obj.GetComponent<RoadGenerator>();
+            road.Map = this;
+            lastDir = road.direction;
+            road.direction = NextDirection;
+            road.length = nextLength;
+            space = 0;
+            road.Generate(lastDir, endPath, newLevel);
+            calculateNextPosition();
+            setNextDirection();
+            obj.tag = NextDirection.ToString();
+
+            return road;
         }
 
-        //nextDirection = convertIntToDirection(Random.Range(0, 3)); // random direction
-        obj.tag = nextDirection.ToString();
-
-        return road;
-    }
-
-    void calculateNextPosition(bool longSpace)
-    {
-        float space = hasSpace ? (longSpace ? 1.5f : 1f) : 0f;
-
-        switch (nextDirection)
+        private Direction setNextDirection()
         {
-            case Direction.Straight:
-                nextPostiton.Set(nextPostiton.x, nextPostiton.y + RoadGenerator.PATH_HEIGHT * (nextLength + space), 0);
-                break;
-            case Direction.Left:
-                nextPostiton.Set(nextPostiton.x - RoadGenerator.PATH_WIDTH * (nextLength + space), nextPostiton.y, 0);
-                break;
-            case Direction.Right:
-                nextPostiton.Set(nextPostiton.x + RoadGenerator.PATH_WIDTH * (nextLength + space), nextPostiton.y, 0);
-                break;
+            if (NextDirection == Direction.Straight)
+            {
+                int next = (Random.Range(1, 3));
+                NextDirection = convertIntToDirection(next);
+                return NextDirection;
+            }
+            else
+            {
+                NextDirection = Direction.Straight;
+                return NextDirection;
+            }
         }
-    }
 
-    public Direction convertIntToDirection(int i)
-    {
-        switch (i)
+        private void calculateNextPosition()
         {
-            case 0:
-                return Direction.Straight;
-            case 1:
-                if (nextDirection == Direction.Right)
-                {
-                    int random = Random.Range(0, 3);
-                    return convertIntToDirection(random);
-                }
-                return Direction.Left;
-            case 2:
-                if (nextDirection == Direction.Left)
-                {
-                    int random = Random.Range(0, 3);
-                    return convertIntToDirection(random);
-                }
-                return Direction.Right;
+            switch (NextDirection)
+            {
+                case Direction.Straight:
+                    nextPostiton.Set(nextPostiton.x, 0, nextPostiton.z + RoadGenerator.PATH_HEIGHT * (nextLength + space));
+                    break;
+                case Direction.Left:
+                    nextPostiton.Set(nextPostiton.x - RoadGenerator.PATH_WIDTH * (nextLength + space), 0, nextPostiton.z);
+                    break;
+                case Direction.Right:
+                    nextPostiton.Set(nextPostiton.x + RoadGenerator.PATH_WIDTH * (nextLength + space), 0, nextPostiton.z);
+                    break;
+            }
+            //nextPostiton += new Vector3(-1.9f, 0, -2.8f);
+
+            if (nextDirection == Direction.Straight)
+                nextPostiton += new Vector3(-1.9f, 0, -2.8f);
+            else
+                nextPostiton += new Vector3(-1.9f, 0, 1.6f);
         }
 
-        return Direction.Straight;
+        public Direction convertIntToDirection(int i)
+        {
+            switch (i)
+            {
+                case 0:
+                    return Direction.Straight;
+                case 1:
+                    if (NextDirection == Direction.Right)
+                    {
+                        int random = Random.Range(0, 3);
+                        return convertIntToDirection(random);
+                    }
+                    return Direction.Left;
+                case 2:
+                    if (NextDirection == Direction.Left)
+                    {
+                        int random = Random.Range(0, 3);
+                        return convertIntToDirection(random);
+                    }
+                    return Direction.Right;
+            }
+
+            return Direction.Straight;
+        }
     }
 }
