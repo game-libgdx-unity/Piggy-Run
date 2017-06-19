@@ -1,6 +1,9 @@
 ﻿This is an simple gameplay demo. You control a robot and try to survive under attack by the UFO.
  You need to switch to "Robot-run" branch to get this source code
 https://youtu.be/4mLaIZpOOjs
+
+[![Unity Robot vs Alien](https://img.youtube.com/vi/4mLaIZpOOjs/0.jpg)](https://www.youtube.com/watch?v=4mLaIZpOOjs)
+
 Water and Wave effect is made from
 https://www.youtube.com/watch?v=6EtTI5xC524
 #unity3d
