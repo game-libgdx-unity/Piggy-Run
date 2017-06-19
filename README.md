@@ -1,4 +1,6 @@
-﻿This is an simple gameplay demo. You control a robot and try to survive under attack by the UFO.
+This repository is for educational purposes only, DO NOT use this for your commercial projects.
+
+A Simple gameplay demo. You control a robot and try to survive under attack by the UFO.
  You need to switch to "Robot-run" branch to get this source code
 https://youtu.be/4mLaIZpOOjs
 
