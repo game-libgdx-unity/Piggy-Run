@@ -38,7 +38,7 @@ namespace UTJ
         {
             // SystemManager.Instance.registBgm(DrawBuffer.BGM.Battle);
             {
-                float x = MyRandom.Range(500, 1000) * Random.Range(0, 2) == 0 ? 1 : -1;
+                float x = MyRandom.Range(5, 10) * (Random.Range(0, 2) == 0 ? 1 : -1);
                 var position = new Vector3(x, -10f, 20f) + Player.Instance.rigidbody_.transform_.position_;
                 var rotation = Quaternion.Euler(-90f, 0f, 0f);
                 Enemy.create(Enemy.Type.Dragon, ref position, ref rotation);
@@ -46,7 +46,7 @@ namespace UTJ
             for (;;)
             {
                 {
-                    float x = MyRandom.Range(50, 100) * Random.Range(0, 2) == 0 ? 1 : -1;
+                    float x = MyRandom.Range(5, 10) * (Random.Range(0, 2) == 0 ? 1 : -1);
                     var position = new Vector3(x, -10f, 20f) + Player.Instance.rigidbody_.transform_.position_;
                     var rotation = Quaternion.Euler(-90f, 0f, 0f);
                     Enemy.create(Enemy.Type.Zako, ref position, ref rotation);

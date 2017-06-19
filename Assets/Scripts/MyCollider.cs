@@ -321,7 +321,7 @@ public struct MyCollider
 		}
 	}
 
-	public static Type getHitOpponentForPlayer(int id, ref Vector3 pos)
+	public static Type takeEnemyDamageForPlayer(int id, ref Vector3 pos)
 	{
 		Debug.Assert(player_.alive_);
 		pos = player_.opponent_info_.intersect_point_;

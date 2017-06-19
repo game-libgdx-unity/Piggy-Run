@@ -99,7 +99,7 @@ namespace EndlessRun
             road.direction = NextDirection;
             road.length = nextLength;
             space = 0;
-            road.Generate(lastDir, endPath, newLevel);
+            road.Generate(lastDir, newLevel, endPath);
             calculateNextPosition();
             setNextDirection();
             obj.tag = NextDirection.ToString();

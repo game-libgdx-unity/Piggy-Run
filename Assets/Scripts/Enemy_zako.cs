@@ -9,7 +9,9 @@ namespace UTJ {
 
 public partial class Enemy : Task
 {
-	public void zako_init(ref Vector3 position, ref Quaternion rotation)
+        private const float ZAKO_HEALTH = 50f;
+
+        public void zako_init(ref Vector3 position, ref Quaternion rotation)
 	{
 		rigidbody_.init(ref position, ref rotation);
 		collider_ = MyCollider.createEnemy();
@@ -19,7 +21,7 @@ public partial class Enemy : Task
 		enumerator_ = zako_act(); // この瞬間は実行されない
 		on_update_ = new OnUpdateFunc(zako_update);
 		on_render_update_ = new OnRenderUpdateFunc(zako_render_update);
-		life_ = 50f;
+		life_ = ZAKO_HEALTH;
 	}
 
 	public IEnumerator zako_act()

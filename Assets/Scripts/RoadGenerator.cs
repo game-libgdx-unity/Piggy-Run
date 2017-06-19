@@ -39,8 +39,9 @@ namespace EndlessRun
         public Vector3 EndPosition;
         public int length;
 
-        public void Generate(Direction lastDir, bool endPath = false, bool newLevel = false)
-        {
+        public void Generate(Direction lastDir, bool newLevel = false, bool endPath = false)
+        { 
+
             GameObject obj = null;
             for (int i = 0; i < length; i++)
             {

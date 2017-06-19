@@ -33,13 +33,15 @@ public class LookAtMouse : MonoBehaviour
                 {
                     i++;
                     Vector3 pos = shootingT[i % shootingT.Length].position;
+                    Vector3 shootDirection = hit.point - pos;
+                    Quaternion shootRotation = Quaternion.LookRotation(shootDirection);
                     if (i % 2 == 0)
                     {
-                        Player.Instance.Fire_left(ref pos, ref localRotation);
+                        Player.Instance.Fire_left(ref pos, ref shootRotation);
                     }
                     else
                     {
-                        Player.Instance.Fire_right(ref pos, ref localRotation);
+                        Player.Instance.Fire_right(ref pos, ref shootRotation);
                     }
                     //Beamer.Instance.Shoot(shootingT[i % shootingT.Length].position, 30 * direction.normalized, 10 /*damage*/);
                     timer = 0f;

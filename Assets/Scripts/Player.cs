@@ -10,6 +10,8 @@ namespace UTJ
 
     public class Player : Task
     {
+        private const float SHIELD_RADIUS = 1.5f /* radius */;
+
         // singleton
         static Player instance_;
         public static Player Instance { get { return instance_ ?? (instance_ = new Player()); } }
@@ -91,7 +93,7 @@ namespace UTJ
             root_node.rigidbody_.setRotateDamper(40f);
 
             collider_ = MyCollider.createPlayer();
-            MyCollider.initSpherePlayer(collider_, ref rigidbody_.transform_.position_, 1f /* radius */);
+            MyCollider.initSpherePlayer(collider_, ref rigidbody_.transform_.position_, SHIELD_RADIUS /* radius */);
 
             // muscle_motion_.fix(MuscleMotion.Parts.Ribs, 0.4f /* interpolate_ratio */);
             // muscle_motion_.fix(MuscleMotion.Parts.Ribs2);
@@ -162,7 +164,7 @@ namespace UTJ
         private void fire(Bullet bullet, double update_time)
         {
             const float BULLET_SPEED = 40f;
-            var velocity = rigidbody_.transform_.rotation_ * -CV.Vector3Forward * BULLET_SPEED;
+            var velocity = bullet.rigidbody_.transform_.rotation_ * CV.Vector3Forward * BULLET_SPEED;
             bullet.release(ref velocity, update_time);
             bullet.setPower(.25f);
             SystemManager.Instance.registSound(DrawBuffer.SE.Bullet);
@@ -188,7 +190,7 @@ namespace UTJ
 
         public void Fire_left(ref Vector3 pos, ref Quaternion rotation)
         {
-            fire_left(1/60f);
+            fire_left(1 / 60f);
             left_held_bullet_ = Bullet.create(ref pos,
                                               ref rotation);
         }
@@ -204,32 +206,36 @@ namespace UTJ
             Vector3 pos = robotT.position;
             rigidbody_.setPosition(ref pos);
             rigidbody_.update(dt);
+            var intersect_point = CV.Vector3Zero;
+            if (MyCollider.takeEnemyDamageForPlayer(collider_, ref intersect_point) == MyCollider.Type.EnemyBullet)
+            {
+                Shield.Instance.spawn(ref intersect_point,
+                                      ref rigidbody_.transform_.position_,
+                                      update_time,
+                                      Shield.Type.Green);
+                SystemManager.Instance.registSound(DrawBuffer.SE.Shield);
+                // hit_time_ = (float)update_time;
+                // hit_position_ = intersect_point;
+            }
             MyCollider.updatePlayer(collider_, ref pos);
             fire_right(update_time);
             fire_left(update_time);
 
-            //if (rigidbody_.transform_.position_.y < 5f)
-            //{
-            //    WaterSurface.Instance.makeBump(ref rigidbody_.transform_.position_, -0.05f /* value */, 0.6f /* size */);
-            //    var pos = rigidbody_.transform_.position_;
-            //    pos.y = -2f;
-            //    float vel_y;
-            //    if (hori != 0f)
-            //    {
-            //        vel_y = MyRandom.Range(7f, 9f);
-            //    }
-            //    else
-            //    {
-            //        vel_y = MyRandom.Range(5f, 7f);
-            //    }
-            //    var vel = new Vector3(0f,
-            //                          vel_y,
-            //                          0f);
-            //    if (MyRandom.Probability(0.2f))
-            //    {
-            //        WaterSplash.Instance.spawn(ref pos, ref vel, update_time);
-            //    }
-            //}
+            if (rigidbody_.transform_.position_.y < 5f)
+            {
+                WaterSurface.Instance.makeBump(ref rigidbody_.transform_.position_, -0.05f /* value */, 0.6f /* size */);
+                pos = rigidbody_.transform_.position_;
+                pos.y = -2f;
+                float vel_y;
+                vel_y = MyRandom.Range(5f, 7f);
+                var vel = new Vector3(0f,
+                                      vel_y,
+                                      0f);
+                if (MyRandom.Probability(0.2f))
+                {
+                    WaterSplash.Instance.spawn(ref pos, ref vel, update_time);
+                }
+            }
             on_ground_time_ += dt;
         }
 
