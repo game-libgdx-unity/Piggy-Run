@@ -69,7 +69,6 @@ namespace UTJ
         }
 
         private CameraBase my_camera_;
-        private CameraBase spectator_camera_;
 
         private long update_frame_;
         private long render_frame_;
@@ -115,11 +114,8 @@ namespace UTJ
 
         private AudioSource audio_sources_bgm_;
         public AudioClip bgm01_;
-        private bool is_bgm_playing_;
-
-        private bool spectator_mode_;
+        private bool is_bgm_playing_; 
         private bool initialized_ = false;
-        private bool auto_ = true;
 
         IEnumerator Start()
         {
@@ -131,10 +127,9 @@ namespace UTJ
             UnityPluginIF.Unload();
         }
 
-        private void set_camera(bool spectator_mode)
+        private void set_camera()
         {
-            my_camera_.active_ = !spectator_mode;
-            spectator_camera_.active_ = spectator_mode;
+            my_camera_.active_ = true;
         }
 
         private IEnumerator initialize()
@@ -159,8 +154,7 @@ namespace UTJ
             update_time_ = 0f;
             render_frame_ = 0;
             render_sync_frame_ = 0;
-            pause_ = false;
-            spectator_mode_ = auto_;
+            pause_ = false; 
             canvas_.SetActive(false);
 
             camera_ = camera_holder_.GetComponent<Camera>();
@@ -168,7 +162,7 @@ namespace UTJ
 
             BoxingPool.init();
             InputManager.Instance.init();
-            Controller.Instance.init(auto_);
+            Controller.Instance.init(false);
             TaskManager.Instance.init();
             MyCollider.createPool();
             Bullet.createPool();
@@ -209,9 +203,7 @@ namespace UTJ
             }
 
             yield return Player.Instance.initialize();
-            my_camera_ = MyCamera.create();
-            spectator_camera_ = SpectatorCamera.create();
-            set_camera(spectator_mode_);
+            my_camera_ = MyCamera.create(); 
 
             if (player_prefab_ != null)
             {
@@ -383,7 +375,7 @@ namespace UTJ
                     update_time_ += dt_;
                 }
             }
-            CameraBase current_camera = spectator_mode_ ? spectator_camera_ : my_camera_;
+            CameraBase current_camera = /*spectator_mode_ ? spectator_camera_ : */my_camera_;
             // begin
             MySprite.Instance.begin();
             MyFont.Instance.begin();
@@ -675,20 +667,12 @@ namespace UTJ
         }
 
         public void OnPauseMenuAuto()
-        {
-            auto_ = true;
-            spectator_mode_ = true;
-            set_camera(spectator_mode_);
-            //Controller.Instance.set(auto_);
+        { 
             pause_ = false;
         }
 
         public void OnPuaseMenuPlay()
-        {
-            auto_ = false;
-            spectator_mode_ = false;
-            set_camera(spectator_mode_);
-            //Controller.Instance.set(auto_);
+        { 
             pause_ = false;
         }
     }
