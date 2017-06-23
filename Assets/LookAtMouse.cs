@@ -16,6 +16,9 @@ public class LookAtMouse : MonoBehaviour
     private Tween rotationTween;
     void Update()
     {
+        if (Input.mousePosition.y < 280)
+            return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 10000f))
