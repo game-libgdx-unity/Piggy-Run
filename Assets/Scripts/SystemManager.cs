@@ -45,8 +45,10 @@ namespace UTJ
         public Material font_material_;
         public GameObject canvas_;
 
+        public GameObject camera_final_holder_;
         public GameObject camera_holder_;
-        private Camera camera_;
+        public Camera camera_;
+        public Camera camera_final_;
         private RenderTexture render_texture_;
         public Matrix4x4 ProjectionMatrix { get; set; }
 
@@ -114,7 +116,7 @@ namespace UTJ
 
         private AudioSource audio_sources_bgm_;
         public AudioClip bgm01_;
-        private bool is_bgm_playing_; 
+        private bool is_bgm_playing_;
         private bool initialized_ = false;
 
         IEnumerator Start()
@@ -134,8 +136,8 @@ namespace UTJ
 
         private IEnumerator initialize()
         {
-            //camera_final_ = camera_final_holder_.GetComponent<Camera>();
-            //camera_final_.enabled = false;
+            camera_final_ = camera_final_holder_.GetComponent<Camera>();
+            camera_final_.enabled = false;
             UnityPluginIF.Load("UnityPlugin");
 
             Application.targetFrameRate = (int)RENDER_FPS;
@@ -154,7 +156,7 @@ namespace UTJ
             update_time_ = 0f;
             render_frame_ = 0;
             render_sync_frame_ = 0;
-            pause_ = false; 
+            pause_ = false;
             canvas_.SetActive(false);
 
             camera_ = camera_holder_.GetComponent<Camera>();
@@ -203,7 +205,7 @@ namespace UTJ
             }
 
             yield return Player.Instance.initialize();
-            my_camera_ = MyCamera.create(); 
+            my_camera_ = MyCamera.create();
 
             if (player_prefab_ != null)
             {
@@ -315,13 +317,13 @@ namespace UTJ
 		int rw = 568;
 		int rh = 320;
 #endif
-            //render_texture_ = new RenderTexture(rw, rh, 24 /* depth */, RenderTextureFormat.ARGB32);
-            //render_texture_.Create();
-            //camera_.targetTexture = render_texture_;
-            //final_material_.mainTexture = render_texture_;
+            render_texture_ = new RenderTexture(rw, rh, 24 /* depth */, RenderTextureFormat.ARGB32);
+            render_texture_.Create();
+            camera_.targetTexture = render_texture_;
+            final_material_.mainTexture = render_texture_;
 
             initialized_ = true;
-            //camera_final_.enabled = true;
+            camera_final_.enabled = true;
         }
 
         void OnDestroy()
@@ -350,16 +352,16 @@ namespace UTJ
             //Controller.Instance.fetch(updating_front, update_time_);
 
             //var controller = Controller.Instance.getLatest();
-//            if (!pause_ && controller.isPauseButtonDown())
-//            {
-//                pause_ = true;
-//            }
-//#if UNITY_EDITOR
-//            else if (pause_ && controller.isPauseButtonDown())
-//            {
-//                pause_ = false;
-//            }
-//#endif
+            //            if (!pause_ && controller.isPauseButtonDown())
+            //            {
+            //                pause_ = true;
+            //            }
+            //#if UNITY_EDITOR
+            //            else if (pause_ && controller.isPauseButtonDown())
+            //            {
+            //                pause_ = false;
+            //            }
+            //#endif
 
             // update
             if (!pause_)
@@ -667,12 +669,12 @@ namespace UTJ
         }
 
         public void OnPauseMenuAuto()
-        { 
+        {
             pause_ = false;
         }
 
         public void OnPuaseMenuPlay()
-        { 
+        {
             pause_ = false;
         }
     }

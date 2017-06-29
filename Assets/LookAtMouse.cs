@@ -19,14 +19,14 @@ public class LookAtMouse : MonoBehaviour
         if (Input.mousePosition.y < 280)
             return;
 
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = SystemManager.Instance.camera_.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 10000f))
         {
             Debug.Log(hit.collider.gameObject.name);
             Vector3 direction = hit.point - gunT.transform.position;
             Quaternion localRotation = Quaternion.LookRotation(direction);
-            Quaternion targetQuarternion = Quaternion.Euler(-localRotation.eulerAngles.y, localRotation.eulerAngles.x, 0);
+            Quaternion targetQuarternion = Quaternion.Euler(localRotation.eulerAngles.y, localRotation.eulerAngles.x, 0);
             //gunT.localRotation = Quaternion.Lerp(gunT.rotation, targetQuarternion, Time.deltaTime);
             gunT.localRotation = targetQuarternion;
             if (Input.GetMouseButton(0))
